@@ -24,21 +24,18 @@ jobs:
 
       - name: Aumentar versión (Minor)
         run: |
-          # Lee la versión actual del package.json
-          current_version=$(grep '"version":' package.json | cut -d '"' -f 4)
-          echo "Versión actual: $current_version"
+          # Extraer la versión actual de forma segura
+          OLD_VERSION=$(node -p "require('./package.json').version")
+          echo "Versión anterior: $OLD_VERSION"
           
-          # Separa los números (1.0.0 -> major=1, minor=0, patch=0)
-          IFS='.' read -r major minor patch <<< "$current_version"
+          # Calcular la nueva versión (1.0.0 -> 1.1.0)
+          # Usamos un pequeño script de Node para no fallar con sed
+          NEW_VERSION=$(node -p "const v = '$OLD_VERSION'.split('.'); v[1] = parseInt(v[1]) + 1; v[2] = 0; v.join('.')")
+          echo "Nueva versión: $NEW_VERSION"
           
-          # Incrementa el minor (de 0 a 1)
-          new_version="$major.$((minor + 1)).0"
-          echo "Nueva versión: $new_version"
+          # Actualizar el package.json usando Node para mantener el formato
+          node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8')); pkg.version = '$NEW_VERSION'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');"
           
-          # Reemplaza la versión en el archivo
-          sed -i "s/\"version\": \"$current_version\"/\"version\": \"$new_version\"/" package.json
-          
-          # Guarda los cambios en main
           git add package.json
-          git commit -m "chore: bump version to $new_version [skip ci]"
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
           git push origin main
