@@ -15,6 +15,8 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
         with:
+          # Esto le da al robot permiso total para volver a subir el cambio
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Configurar Git
@@ -22,20 +24,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Aumentar versión (Minor)
+      - name: Aumentar versión
         run: |
-          # Extraer la versión actual de forma segura
-          OLD_VERSION=$(node -p "require('./package.json').version")
-          echo "Versión anterior: $OLD_VERSION"
+          # Un script de Node súper simple para actualizar el archivo
+          node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); const parts = pkg.version.split('.'); parts[1] = parseInt(parts[1]) + 1; parts[2] = 0; pkg.version = parts.join('.'); fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
           
-          # Calcular la nueva versión (1.0.0 -> 1.1.0)
-          # Usamos un pequeño script de Node para no fallar con sed
-          NEW_VERSION=$(node -p "const v = '$OLD_VERSION'.split('.'); v[1] = parseInt(v[1]) + 1; v[2] = 0; v.join('.')")
-          echo "Nueva versión: $NEW_VERSION"
-          
-          # Actualizar el package.json usando Node para mantener el formato
-          node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8')); pkg.version = '$NEW_VERSION'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');"
-          
+          # Subir el cambio a GitHub
           git add package.json
-          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git commit -m "chore: bump version [skip ci]"
           git push origin main
