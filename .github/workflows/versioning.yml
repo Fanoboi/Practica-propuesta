@@ -15,7 +15,6 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
         with:
-          # Esto le da al robot permiso total para volver a subir el cambio
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
@@ -26,10 +25,13 @@ jobs:
 
       - name: Aumentar versión
         run: |
-          # Un script de Node súper simple para actualizar el archivo
-          node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); const parts = pkg.version.split('.'); parts[1] = parseInt(parts[1]) + 1; parts[2] = 0; pkg.version = parts.join('.'); fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
+          # 1. Limpiar caracteres extraños (UTF-16 a UTF-8)
+          sed -i 's/\x0//g' package.json
           
-          # Subir el cambio a GitHub
+          # 2. Cambiar la versión de 1.0.0 a 1.1.0
+          sed -i 's/"version": "1.0.0"/"version": "1.1.0"/' package.json
+          
+          # 3. Subir cambios
           git add package.json
-          git commit -m "chore: bump version [skip ci]"
+          git commit -m "chore: bump version to 1.1.0 [skip ci]"
           git push origin main
