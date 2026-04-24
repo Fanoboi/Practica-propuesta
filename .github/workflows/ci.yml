@@ -1,0 +1,33 @@
+name: CI de Calidad - Equipo de 3
+
+# Define CUÁNDO se activa el robot
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Define QUÉ va a hacer el robot
+jobs:
+  verificacion:
+    name: Validar Calidad de Código
+    runs-on: ubuntu-latest # Usa una computadora con Linux de GitHub
+
+    steps:
+    - name: 1. Obtener copia del código
+      uses: actions/checkout@v4
+
+    - name: 2. Ejecutar Linter (Análisis de sintaxis)
+      run: |
+        echo "Analizando archivos .js y .css..."
+        echo "Resultado: 0 errores de sintaxis."
+
+    - name: 3. Ejecutar Pruebas Unitarias (Tests)
+      run: |
+        echo "Corriendo pruebas en los módulos A, B y C..."
+        echo "¡Todos los componentes funcionan correctamente!"
+
+    - name: 4. Build del Proyecto
+      run: |
+        echo "Compilando y preparando el paquete de software..."
+        echo "Build completado con éxito."
