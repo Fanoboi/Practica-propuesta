@@ -1,0 +1,44 @@
+name: Versionado Semántico Automático
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  bump-version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Aumentar versión (Minor)
+        run: |
+          # Lee la versión actual del package.json
+          current_version=$(grep '"version":' package.json | cut -d '"' -f 4)
+          echo "Versión actual: $current_version"
+          
+          # Separa los números (1.0.0 -> major=1, minor=0, patch=0)
+          IFS='.' read -r major minor patch <<< "$current_version"
+          
+          # Incrementa el minor (de 0 a 1)
+          new_version="$major.$((minor + 1)).0"
+          echo "Nueva versión: $new_version"
+          
+          # Reemplaza la versión en el archivo
+          sed -i "s/\"version\": \"$current_version\"/\"version\": \"$new_version\"/" package.json
+          
+          # Guarda los cambios en main
+          git add package.json
+          git commit -m "chore: bump version to $new_version [skip ci]"
+          git push origin main
