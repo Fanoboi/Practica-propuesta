@@ -1,0 +1,32 @@
+name: Release Automatizado
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Crear GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}.0.0
+          name: Release v${{ github.run_number }}.0.0
+          body: |
+            ## Changelog Automático
+            - Se han integrado nuevas funcionalidades desde la rama develop.
+            - Despliegue completado a Staging/Producción.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
